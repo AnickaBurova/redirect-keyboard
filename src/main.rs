@@ -151,7 +151,7 @@ fn main() {
         let mut ap = ArgumentParser::new();
         ap.set_description("Synchronise clipboard content between two computers.");
         ap.refer(&mut config.master)
-            .add_option(&["-m","--master"],StoreTrue,"Act as a master, this machine will redirect keyboard to the other one.").required();
+            .add_option(&["-m","--master"],StoreTrue,"Act as a master, this machine will redirect keyboard to the other one.");
         ap.refer(&mut config.skip_client)
             .add_option(&["-s","--skip_client"],StoreTrue,"Skip connecting to client and create server right away.");
         ap.refer(&mut config.port)
