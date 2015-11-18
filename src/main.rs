@@ -145,7 +145,7 @@ fn main() {
         port: 24012,
         localip : "127.0.0.1".to_owned(),
         outsideip : "127.0.0.1".to_owned(),
-        master : true
+        master : false
     };
     {
         let mut ap = ArgumentParser::new();
