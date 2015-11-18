@@ -1,6 +1,11 @@
 [package]
 name = "redirect-keyboard"
 version = "0.1.0"
-authors = ["Milan Buransky <milan.buransky@ims-evolve.com>"]
+authors = ["Milan Buransky <anicka.burova@gmail.com>"]
 
 [dependencies]
+byteorder = "*"
+argparse = "*"
+
+[target.x86_64-apple-darwin.dependencies]
+nix = "*"
