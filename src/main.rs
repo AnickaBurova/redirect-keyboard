@@ -33,7 +33,7 @@ enum Message{
 
 fn execute_message(msg : Message){
     match msg{
-        Message::KeyPress(code) => println!("received key: {}", code),
+        Message::KeyPress(code) => println!("received key: {}", code as char),
         _ => println!("there is an error message!")
     };
 }
