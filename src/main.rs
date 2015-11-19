@@ -3,6 +3,9 @@ extern crate argparse;
 #[cfg(target_os="macos")]
 extern crate nix;
 
+#[cfg(target_os="windows")]
+extern crate libc;
+
 use std::net::{TcpListener,TcpStream};
 use std::io::{Error, ErrorKind, Result  };
 use std::thread;
@@ -31,9 +34,77 @@ enum Message{
     KeyPress(u8)
 }
 
+#[cfg(target_os="windows")]
+#[allow(non_snake_case)]
+struct KeybdInput
+{
+    wVk : u16,
+    wScan : u16,
+    dwFlags  : u32,
+    // time : u32,
+    // dwExtraInfo : *mut libc::c_void
+}
+
+#[cfg(target_os="windows")]
+fn serialise_ki(ki : KeybdInput) -> Result<[u8]> {
+    let mut buf = vec![];
+    buf.write_u32::<LittleEndian>(1).unwrap();
+    buf.write_u16::<LittleEndian>(ki.wVK).unwrap();
+    buf.write_u16::<LittleEndian>(ki.wScan).unwrap();
+    buf.write_u32::<LittleEndian>(ki.dwFlags).unwrap();
+    buf.write_u32::<LittleEndian>(0).unwrap();
+    buf.write_u32::<LittleEndian>(0).unwrap();
+    Ok(buf)
+}
+
+
+#[cfg(target_os="windows")]
+fn PressCharacter(ch : char) -> Result<()>{
+    let mut ki = KeybdInput{
+        wVK : ch as u16,
+        wScan : 0u16,
+        dwFlags : 0u32,
+    };
+    let buf = serialise_ki(ki);
+    SendInput(1, buf.as_ptr(),buf.len());
+    ki.dwFlags = 2;
+    SendInput(1, buf.as_ptr(),buf.len());
+    Ok(())
+}
+#[cfg(not(target_os="windows"))]
+fn PressCharacter(ch : char) -> Result<()>{
+    Ok(())
+}
+
+
+
+// #[cfg(target_os="windows")]
+// #[allow(non_snake_case)]
+// struct MouseInput
+// {
+//     dx : i32,
+//     dy : i32,
+//     mouseData : i32,
+//     dwFlags : i32,
+//     time : i32,
+//     dwExtraInfo : *mut libc::c_void
+// }
+
+#[cfg(target_os="windows")]
+#[link(name = "user32")]
+#[allow(non_snake_case)]
+extern "stdcall" {
+
+
+    fn SendInput(nInputs: libc::c_uint, pInputs : *const u8, cbSize : libc::c_int) -> libc::c_uint;
+}
+
 fn execute_message(msg : Message){
     match msg{
-        Message::KeyPress(code) => println!("received key: {}", code as char),
+        Message::KeyPress(code) => {
+            println!("received key: {}", code as char);
+            PressCharacter(code as char);
+        },
         _ => println!("there is an error message!")
     };
 }
