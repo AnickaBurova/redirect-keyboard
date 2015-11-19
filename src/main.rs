@@ -4,7 +4,8 @@ extern crate argparse;
 extern crate nix;
 
 #[cfg(target_os="windows")]
-extern crate libc;
+// extern crate libc;
+extern crate winapi;
 
 use std::net::{TcpListener,TcpStream};
 use std::io::{Error, ErrorKind, Result  };
@@ -33,53 +34,48 @@ enum Message{
     KeyPress(u8)
 }
 
-#[cfg(target_os="windows")]
-#[allow(non_snake_case)]
-struct KeybdInput
-{
-    wVK : u16,
-    wScan : u16,
-    dwFlags  : u32,
-    // time : u32,
-    // dwExtraInfo : *mut libc::c_void
-}
+// #[cfg(target_os="windows")]
+// #[allow(non_snake_case)]
+// struct KeybdInput
+// {
+//     wVK : u16,
+//     wScan : u16,
+//     dwFlags  : u32,
+//     // time : u32,
+//     // dwExtraInfo : *mut libc::c_void
+// }
 
-#[cfg(target_os="windows")]
-fn serialise_ki(ki : KeybdInput) -> Vec<u8> {
-    let mut buf = vec![];
-    buf.write_u32::<LittleEndian>(1).unwrap();
-    buf.write_u16::<LittleEndian>(ki.wVK).unwrap();
-    buf.write_u16::<LittleEndian>(ki.wScan).unwrap();
-    buf.write_u32::<LittleEndian>(ki.dwFlags).unwrap();
-    buf.write_u32::<LittleEndian>(0).unwrap();
-    buf.write_u32::<LittleEndian>(0).unwrap();
-    buf
-}
+// #[cfg(target_os="windows")]
+// fn serialise_ki(ki : KeybdInput) -> Vec<u8> {
+//     let mut buf = vec![];
+//     buf.write_u32::<LittleEndian>(1).unwrap();
+//     buf.write_u16::<LittleEndian>(ki.wVK).unwrap();
+//     buf.write_u16::<LittleEndian>(ki.wScan).unwrap();
+//     buf.write_u32::<LittleEndian>(ki.dwFlags).unwrap();
+//     buf.write_u32::<LittleEndian>(0).unwrap();
+//     buf.write_u32::<LittleEndian>(0).unwrap();
+//     buf
+// }
 
 
 #[cfg(target_os="windows")]
 fn press_character(ch : char) -> Result<()>{
-    let mut ki = KeybdInput{
-        wVK : ch as u16,
-        wScan : 0u16,
-        dwFlags : 0u32,
+    let mut input = winapi::INPUT{
+        type_ : winapi::INPUT_KEYBOARD,
+        u : Default::default()
     };
-    let mut buf = serialise_ki(ki);
-    unsafe{
-        let res = SendInput(1, buf.as_ptr(),buf.len() as i32);
-        println!("send input returns: {}, error: {}", res, GetLastError());
-    }
-    ki = KeybdInput{
-        wVK : ch as u16,
-        wScan : 0u16,
-        dwFlags : 2u32,
+    *input.ki_mut() = winapi::KEYBDINPUT{
+        wVk : ch as u16,
+        wScan : 0,
+        dwFlags : 0,
+        time : 0,
+        dwExtraInfo : 0
     };
-    buf = serialise_ki(ki);
     unsafe{
-        let res = SendInput(1, buf.as_ptr(),buf.len() as i32);
-        println!("send input returns: {}, error: {}", res, GetLastError());
+        user32::SendInput(1, &mut input, mem::size_of::<winapi::INPUT>() as i32);
     }
     Ok(())
+
 }
 #[cfg(not(target_os="windows"))]
 fn press_character(ch : char) -> Result<()>{
@@ -87,27 +83,6 @@ fn press_character(ch : char) -> Result<()>{
 }
 
 
-
-// #[cfg(target_os="windows")]
-// #[allow(non_snake_case)]
-// struct MouseInput
-// {
-//     dx : i32,
-//     dy : i32,
-//     mouseData : i32,
-//     dwFlags : i32,
-//     time : i32,
-//     dwExtraInfo : *mut libc::c_void
-// }
-
-#[cfg(target_os="windows")]
-#[link(name = "user32")]
-#[allow(non_snake_case)]
-extern "stdcall" {
-
-
-    fn SendInput(nInputs: libc::c_uint, pInputs : *const u8, cbSize : libc::c_int) -> libc::c_uint;
-}
 
 #[cfg(target_os="windows")]
 #[link(name = "kernel32")]
