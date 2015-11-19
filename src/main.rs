@@ -66,8 +66,8 @@ fn press_character(ch : char) -> Result<()>{
     };
     let mut buf = serialise_ki(ki);
     unsafe{
-        let mut res = SendInput(1, buf.as_ptr(),buf.len() as i32);
-        println!("send input returns {}", res);
+        let res = SendInput(1, buf.as_ptr(),buf.len() as i32);
+        println!("send input returns: {}, error: {}", res, GetLastError());
     }
     ki = KeybdInput{
         wVK : ch as u16,
@@ -76,8 +76,8 @@ fn press_character(ch : char) -> Result<()>{
     };
     buf = serialise_ki(ki);
     unsafe{
-        res = SendInput(1, buf.as_ptr(),buf.len() as i32);
-        println!("send input returns {}", res);
+        let res = SendInput(1, buf.as_ptr(),buf.len() as i32);
+        println!("send input returns: {}, error: {}", res, GetLastError());
     }
     Ok(())
 }
@@ -107,6 +107,14 @@ extern "stdcall" {
 
 
     fn SendInput(nInputs: libc::c_uint, pInputs : *const u8, cbSize : libc::c_int) -> libc::c_uint;
+}
+
+#[cfg(target_os="windows")]
+#[link(name = "kernel32")]
+#[allow(non_snake_case)]
+extern "stdcall" {
+
+    fn GetLastError() -> libc::c_uint;
 }
 
 fn execute_message(msg : Message){
