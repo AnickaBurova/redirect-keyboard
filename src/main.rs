@@ -9,12 +9,11 @@ extern crate libc;
 use std::net::{TcpListener,TcpStream};
 use std::io::{Error, ErrorKind, Result  };
 use std::thread;
-use byteorder::{ReadBytesExt, WriteBytesExt,  LittleEndian};
-use std::sync::mpsc::{Sender, channel};
-use std::time::Duration;
+use byteorder::{ReadBytesExt};
+#[cfg(target_os="windows")]
+use byteorder::{WriteBytesExt,  LittleEndian};
 use argparse::{ArgumentParser, Store,StoreTrue};
 use std::io::prelude::*;
-use std::io;
 
 #[cfg(target_os="macos")]
 use nix::sys::termios;
@@ -66,14 +65,16 @@ fn press_character(ch : char) -> Result<()>{
         dwFlags : 0u32,
     };
     let mut buf = serialise_ki(ki);
-    SendInput(1, buf.as_ptr(),buf.len());
+    let mut res = SendInput(1, buf.as_ptr(),buf.len() as i32);
+    println!("send input returns {}", res);
     ki = KeybdInput{
         wVK : ch as u16,
         wScan : 0u16,
         dwFlags : 2u32,
     };
     buf = serialise_ki(ki);
-    SendInput(1, buf.as_ptr(),buf.len());
+    res = SendInput(1, buf.as_ptr(),buf.len() as i32);
+    println!("send input returns {}", res);
     Ok(())
 }
 #[cfg(not(target_os="windows"))]

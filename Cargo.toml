@@ -6,6 +6,8 @@ authors = ["Milan Buransky <anicka.burova@gmail.com>"]
 [dependencies]
 byteorder = "*"
 argparse = "*"
+libc = "*"
+
 
 [target.x86_64-apple-darwin.dependencies]
 nix = "*"
