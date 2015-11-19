@@ -38,7 +38,7 @@ enum Message{
 #[allow(non_snake_case)]
 struct KeybdInput
 {
-    wVk : u16,
+    wVK : u16,
     wScan : u16,
     dwFlags  : u32,
     // time : u32,
@@ -46,7 +46,7 @@ struct KeybdInput
 }
 
 #[cfg(target_os="windows")]
-fn serialise_ki(ki : KeybdInput) -> [u8] {
+fn serialise_ki(ki : KeybdInput) -> Vec<u8> {
     let mut buf = vec![];
     buf.write_u32::<LittleEndian>(1).unwrap();
     buf.write_u16::<LittleEndian>(ki.wVK).unwrap();
@@ -67,7 +67,11 @@ fn press_character(ch : char) -> Result<()>{
     };
     let mut buf = serialise_ki(ki);
     SendInput(1, buf.as_ptr(),buf.len());
-    ki.dwFlags = 2;
+    ki = KeybdInput{
+        wVK : ch as u16,
+        wScan : 0u16,
+        dwFlags : 2u32,
+    };
     buf = serialise_ki(ki);
     SendInput(1, buf.as_ptr(),buf.len());
     Ok(())
