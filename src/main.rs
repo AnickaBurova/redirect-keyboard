@@ -65,16 +65,20 @@ fn press_character(ch : char) -> Result<()>{
         dwFlags : 0u32,
     };
     let mut buf = serialise_ki(ki);
-    let mut res = SendInput(1, buf.as_ptr(),buf.len() as i32);
-    println!("send input returns {}", res);
+    unsafe{
+        let mut res = SendInput(1, buf.as_ptr(),buf.len() as i32);
+        println!("send input returns {}", res);
+    }
     ki = KeybdInput{
         wVK : ch as u16,
         wScan : 0u16,
         dwFlags : 2u32,
     };
     buf = serialise_ki(ki);
-    res = SendInput(1, buf.as_ptr(),buf.len() as i32);
-    println!("send input returns {}", res);
+    unsafe{
+        res = SendInput(1, buf.as_ptr(),buf.len() as i32);
+        println!("send input returns {}", res);
+    }
     Ok(())
 }
 #[cfg(not(target_os="windows"))]
