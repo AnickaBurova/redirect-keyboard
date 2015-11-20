@@ -30,7 +30,7 @@ fn char2keys(ch : char) -> Vec<Key>{
 	}
 	if 'a' <= ch && ch <= 'z'{
         let deltaA = ch as i32 - 'a' as i32;
-        return vec!(Key::Press(deltaA+winapi::VK_A),Key::Release(deltaA+winapi::VK_A));
+        return vec!(Key::Press(deltaA+0x41),Key::Release(deltaA+0x41));
 	}
     vec!()
 }
