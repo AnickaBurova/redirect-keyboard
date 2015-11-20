@@ -9,8 +9,8 @@ use std::io::prelude::*;
 
 
 enum Key {
-    Press(u16),
-    Release(u16)
+    Press(i32),
+    Release(i32)
 }
 
 static PressShift : Key = Key::Press(winapi::VK_LSHIFT);
@@ -20,7 +20,7 @@ static ReleaseShift : Key = Key::Release(winapi::VK_LSHIFT);
 
 fn char2keys(ch : char) -> Vec<Key>{
 	if 'A' <= ch && ch <= 'Z'{
-        let deltaA = ch as u16 - 'A' as u16;
+        let deltaA = ch as i32 - 'A' as i32;
         return vec!(
             PressShift,
             Key::Press(deltaA+0x41),
@@ -29,8 +29,8 @@ fn char2keys(ch : char) -> Vec<Key>{
         );
 	}
 	if 'a' <= ch && ch <= 'z'{
-        let deltaA = ch as u16 - 'a' as u16;
-        return vec!(Key::Press(deltaA+0x41),Key::Release(deltaA+0x41));
+        let deltaA = ch as i32 - 'a' as i32;
+        return vec!(Key::Press(deltaA+winapi::VK_A),Key::Release(deltaA+winapi::VK_A));
 	}
     vec!()
 }
@@ -49,7 +49,7 @@ pub fn press_character(ch : char) -> Result<()>{
         };
         unsafe{
             *input.ki_mut() = winapi::KEYBDINPUT{
-                wVk : code,
+                wVk : code as u16,
                 wScan : 0,
                 dwFlags : flags,
                 time : 0,
