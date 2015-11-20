@@ -7,6 +7,7 @@ authors = ["Milan Buransky <anicka.burova@gmail.com>"]
 byteorder = "*"
 argparse = "*"
 winapi = "*"
+user32-sys="*"
 
 
 [target.x86_64-apple-darwin.dependencies]
