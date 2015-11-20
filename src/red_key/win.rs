@@ -7,7 +7,7 @@ use std::io::{ Result  };
 use std::io::prelude::*;
 
 
-
+#[derive(Clone,Copy)]
 enum Key {
     Press(i32),
     Release(i32)
