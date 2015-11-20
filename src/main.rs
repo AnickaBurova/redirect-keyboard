@@ -3,18 +3,17 @@ extern crate argparse;
 #[cfg(target_os="macos")]
 extern crate nix;
 
-#[cfg(target_os="windows")]
-// extern crate libc;
-extern crate winapi;
 
 use std::net::{TcpListener,TcpStream};
 use std::io::{Error, ErrorKind, Result  };
 use std::thread;
 use byteorder::{ReadBytesExt};
-#[cfg(target_os="windows")]
-use byteorder::{WriteBytesExt,  LittleEndian};
 use argparse::{ArgumentParser, Store,StoreTrue};
 use std::io::prelude::*;
+
+
+#[cfg(target_os="windows")]
+use winkeys;
 
 #[cfg(target_os="macos")]
 use nix::sys::termios;
@@ -34,69 +33,16 @@ enum Message{
     KeyPress(u8)
 }
 
-// #[cfg(target_os="windows")]
-// #[allow(non_snake_case)]
-// struct KeybdInput
-// {
-//     wVK : u16,
-//     wScan : u16,
-//     dwFlags  : u32,
-//     // time : u32,
-//     // dwExtraInfo : *mut libc::c_void
-// }
-
-// #[cfg(target_os="windows")]
-// fn serialise_ki(ki : KeybdInput) -> Vec<u8> {
-//     let mut buf = vec![];
-//     buf.write_u32::<LittleEndian>(1).unwrap();
-//     buf.write_u16::<LittleEndian>(ki.wVK).unwrap();
-//     buf.write_u16::<LittleEndian>(ki.wScan).unwrap();
-//     buf.write_u32::<LittleEndian>(ki.dwFlags).unwrap();
-//     buf.write_u32::<LittleEndian>(0).unwrap();
-//     buf.write_u32::<LittleEndian>(0).unwrap();
-//     buf
-// }
-
-
-#[cfg(target_os="windows")]
-fn press_character(ch : char) -> Result<()>{
-    let mut input = winapi::INPUT{
-        type_ : winapi::INPUT_KEYBOARD,
-        u : Default::default()
-    };
-    *input.ki_mut() = winapi::KEYBDINPUT{
-        wVk : ch as u16,
-        wScan : 0,
-        dwFlags : 0,
-        time : 0,
-        dwExtraInfo : 0
-    };
-    unsafe{
-        user32::SendInput(1, &mut input, mem::size_of::<winapi::INPUT>() as i32);
-    }
-    Ok(())
-
-}
 #[cfg(not(target_os="windows"))]
-fn press_character(ch : char) -> Result<()>{
+fn press_character(_ : char) -> Result<()>{
     Ok(())
-}
-
-
-
-#[cfg(target_os="windows")]
-#[link(name = "kernel32")]
-#[allow(non_snake_case)]
-extern "stdcall" {
-
-    fn GetLastError() -> libc::c_uint;
 }
 
 fn execute_message(msg : Message){
     match msg{
         Message::KeyPress(code) => {
             println!("received key: {}", code as char);
-            press_character(code as char);
+            press_character(code as char).unwrap();
         },
         _ => println!("there is an error message!")
     };
@@ -111,7 +57,6 @@ fn send_message(stream : &mut TcpStream, msg : Message) -> Result<()>{
     }
     Ok(())
 }
-
 
 #[cfg(target_os="macos")]
 fn run_master(stream : &mut TcpStream) -> Result<()>{
@@ -134,7 +79,7 @@ fn run_master(stream : &mut TcpStream) -> Result<()>{
             break;
         } else {
             println!("You pressed byte {}", byte);
-            send_message(stream,Message::KeyPress(byte));
+            send_message(stream,Message::KeyPress(byte)).unwrap();
         }
     }
     println!("Goodbye!");
@@ -143,7 +88,7 @@ fn run_master(stream : &mut TcpStream) -> Result<()>{
 }
 #[cfg(not(target_os="macos"))]
 fn run_master(stream : &mut TcpStream) -> Result<()>{
-    println!("Not supported on windows");
+    println!("Not supported on non mac os");
     Ok(())
 }
 
@@ -156,7 +101,6 @@ fn run_slave(stream : &mut TcpStream) -> Result<()>{
         };
         execute_message(msg);
     }
-    Ok(())
 }
 
 fn run_sync(stream : &mut TcpStream, config : Config) -> Result<()>{
