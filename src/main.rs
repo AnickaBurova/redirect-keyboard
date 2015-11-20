@@ -13,7 +13,7 @@ use std::io::prelude::*;
 
 
 #[cfg(target_os="windows")]
-use winkeys;
+mod win;
 
 #[cfg(target_os="macos")]
 use nix::sys::termios;

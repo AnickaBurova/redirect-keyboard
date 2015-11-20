@@ -1,4 +1,3 @@
-mod winkeys;
 
 
 extern crate winapi;
@@ -29,7 +28,7 @@ fn char2keys(ch : char) -> Vec<Key>{
 
 
 
-fn press_character(ch : char) -> Result<()>{
+pub fn press_character(ch : char) -> Result<()>{
     let mut input = winapi::INPUT{
         type_ : winapi::INPUT_KEYBOARD,
         u : Default::default()
