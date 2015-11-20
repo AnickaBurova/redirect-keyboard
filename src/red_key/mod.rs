@@ -4,7 +4,7 @@ extern crate nix;
 #[cfg(target_os="windows")]
 mod win;
 #[cfg(target_os="windows")]
-use win::*;
+use self::win::*;
 
 use std::net::{TcpStream};
 use std::io::{Error, ErrorKind, Result , stdin };

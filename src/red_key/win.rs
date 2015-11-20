@@ -3,7 +3,8 @@
 extern crate winapi;
 extern crate user32;
 use std::mem;
-use byteorder::{WriteBytesExt,  LittleEndian};
+use std::io::{ Result  };
+use std::io::prelude::*;
 
 
 
@@ -16,11 +17,11 @@ enum Key {
 
 fn char2keys(ch : char) -> Vec<Key>{
 	if 'A' <= ch && ch <= 'Z'{
-        let deltaA = ch - 'A';
+        let deltaA = ch as u16 - 'A' as u16;
         return vec!(Key::Press(deltaA+0x41),Key::Release(deltaA+0x41));
 	}
 	if 'a' <= ch && ch <= 'z'{
-        let deltaA = ch - 'a';
+        let deltaA = ch as u16 - 'a' as u16;
         return vec!(Key::Press(deltaA+0x41),Key::Release(deltaA+0x41));
 	}
     vec!()
@@ -33,10 +34,10 @@ pub fn press_character(ch : char) -> Result<()>{
         type_ : winapi::INPUT_KEYBOARD,
         u : Default::default()
     };
-    for key in char2keys(ch).iter(){
+    for key in char2keys(ch){
         let (code,flags) = match key{
-            Press(code) => (code,0),
-            Release(code) => (code,2)
+            Key::Press(code) => (code,0),
+            Key::Release(code) => (code,2)
         };
         unsafe{
             *input.ki_mut() = winapi::KEYBDINPUT{
