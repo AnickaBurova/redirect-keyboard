@@ -13,12 +13,20 @@ enum Key {
     Release(u16)
 }
 
+static PressShift : Key = Key::Press(winapi::VK_LSHIFT);
+static ReleseasShift : Key = Key::Release(winapi::VK_LSHIFT);
+
 
 
 fn char2keys(ch : char) -> Vec<Key>{
 	if 'A' <= ch && ch <= 'Z'{
         let deltaA = ch as u16 - 'A' as u16;
-        return vec!(Key::Press(deltaA+0x41),Key::Release(deltaA+0x41));
+        return vec!(
+            PressShift,
+            Key::Press(deltaA+0x41),
+            Key::Release(deltaA+0x41),
+            ReleaseShift
+        );
 	}
 	if 'a' <= ch && ch <= 'z'{
         let deltaA = ch as u16 - 'a' as u16;
