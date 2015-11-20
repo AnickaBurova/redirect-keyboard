@@ -1,22 +1,17 @@
-extern crate byteorder;
 extern crate argparse;
-#[cfg(target_os="macos")]
-extern crate nix;
 
 
 use std::net::{TcpListener,TcpStream};
-use std::io::{Error, ErrorKind, Result  };
+use std::io::{ Result  };
 use std::thread;
-use byteorder::{ReadBytesExt};
 use argparse::{ArgumentParser, Store,StoreTrue};
-use std::io::prelude::*;
 
 
-#[cfg(target_os="windows")]
-mod win;
 
-#[cfg(target_os="macos")]
-use nix::sys::termios;
+mod red_key;
+
+use red_key::*;
+
 
 
 #[derive(Clone)]
@@ -28,82 +23,7 @@ struct Config {
     master : bool
 }
 
-enum Message{
-    Error,
-    KeyPress(u8)
-}
-
-#[cfg(not(target_os="windows"))]
-fn press_character(_ : char) -> Result<()>{
-    Ok(())
-}
-
-fn execute_message(msg : Message){
-    match msg{
-        Message::KeyPress(code) => {
-            println!("received key: {}", code as char);
-            press_character(code as char).unwrap();
-        },
-        _ => println!("there is an error message!")
-    };
-}
-
-fn send_message(stream : &mut TcpStream, msg : Message) -> Result<()>{
-    match msg{
-        Message::KeyPress(code) => {
-            let _ = try!(stream.write(&[1u8,code]));
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-#[cfg(target_os="macos")]
-fn run_master(stream : &mut TcpStream) -> Result<()>{
-    let saved_term = match termios::tcgetattr(0){
-        Ok(t) => t,
-        Err(_) => return Err(Error::new(ErrorKind::Other,"Failed to create termios!"))
-    };
-    let mut term = saved_term;
-    // Unset canonical mode, so we get characters immediately
-    term.c_lflag.remove(termios::ICANON);
-    // Don't generate signals on Ctrl-C and friends
-    term.c_lflag.remove(termios::ISIG);
-    // Disable local echo
-    term.c_lflag.remove(termios::ECHO);
-    termios::tcsetattr(0, termios::TCSADRAIN, &term).unwrap();
-    println!("Press Ctrl-C to quit");
-    for byte in std::io::stdin().bytes() {
-        let byte = byte.unwrap();
-        if byte == 3 {
-            break;
-        } else {
-            println!("You pressed byte {}", byte);
-            send_message(stream,Message::KeyPress(byte)).unwrap();
-        }
-    }
-    println!("Goodbye!");
-    termios::tcsetattr(0, termios::TCSADRAIN, &saved_term).unwrap();
-    Ok(())
-}
-#[cfg(not(target_os="macos"))]
-fn run_master(stream : &mut TcpStream) -> Result<()>{
-    println!("Not supported on non mac os");
-    Ok(())
-}
-
-fn run_slave(stream : &mut TcpStream) -> Result<()>{
-    loop {
-        let code : u8 = try!(stream.read_u8());
-        let msg = match code{
-            1 => Message::KeyPress(try!(stream.read_u8())),
-            _ => Message::Error
-        };
-        execute_message(msg);
-    }
-}
-
-fn run_sync(stream : &mut TcpStream, config : Config) -> Result<()>{
+fn run(stream : &mut TcpStream, config : Config) -> Result<()>{
 
     if config.master {
         run_master(stream)
@@ -117,7 +37,7 @@ fn run_sync(stream : &mut TcpStream, config : Config) -> Result<()>{
 fn try_run_client(config : Config) -> Result<()>{
     println!("Trying to connect to {}:{}",config.outsideip, config.port );
     let mut stream = try!(TcpStream::connect((&config.outsideip as &str,config.port)));
-    run_sync(&mut stream,config)
+    run(&mut stream,config)
 }
 
 
@@ -132,7 +52,7 @@ fn run_server(config : Config) -> Result<()> {
                 let cfg = config.clone();
                 thread::spawn(move||{
                     println!("connected");
-                    run_sync(&mut stream.try_clone().unwrap(),cfg)
+                    run(&mut stream.try_clone().unwrap(),cfg)
                 });
             }
             Err(e) => {
