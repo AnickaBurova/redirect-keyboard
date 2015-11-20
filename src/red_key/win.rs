@@ -14,7 +14,7 @@ enum Key {
 }
 
 static PressShift : Key = Key::Press(winapi::VK_LSHIFT);
-static ReleseasShift : Key = Key::Release(winapi::VK_LSHIFT);
+static ReleaseShift : Key = Key::Release(winapi::VK_LSHIFT);
 
 
 
