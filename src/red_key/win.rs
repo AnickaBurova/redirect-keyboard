@@ -27,7 +27,7 @@ static ReleaseShift : Key = Key::Release(winapi::VK_LSHIFT);
 
 macro_rules! keypress {
     ($vk:expr) => {
-        vec!(Key::Press($vk),Key::Release($vk));
+        vec!(Key::Press($vk),Key::Release($vk))
     };
     ($ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr) => {
         if($from <= $ch && $ch <= $to){
@@ -45,7 +45,8 @@ macro_rules! keypress {
         keypress!($ch,$base,$vk,$from,$to,PressShift, ReleaseShift);
     };
     (map => $ch:ident, $keys : ident) => {
-        match $keys.get($ch as i32){
+        let key = ch as i32;
+        match $keys.get(key){
             Some(code) => keypress!(code),
             None => ()
         }
