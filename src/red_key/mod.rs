@@ -14,6 +14,8 @@ use std::io::prelude::*;
 #[cfg(target_os="macos")]
 use self::nix::sys::termios;
 
+mod vim_mode;
+
 
 pub fn run_slave(stream : &mut TcpStream) -> Result<()>{
     loop {

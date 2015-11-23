@@ -32,12 +32,19 @@ macro_rules! keypress {
     (shift => $ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr) => {
         keypress!($ch,$base,$vk,$from,$to,PressShift, ReleaseShift);
     };
+    (one => $ch:ident, $code : expr, $vk) => {
+        if ($ch as i32 == $code){
+            return vec!(Key::Press($vk),Key::Release($vk));
+        }
+    };
 }
 
 fn char2keys(ch : char) -> Vec<Key>{
     keypress!(shift => ch,'A', 0x41, 'A', 'Z');
     keypress!(ch,'a', 0x41, 'a', 'z');
     keypress!(ch,'0', 0x30, '0', '9');
+    keypress!(one => ch, 10, winapi::VK_RETURN);
+
     vec!()
 }
 
