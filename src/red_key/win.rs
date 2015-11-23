@@ -32,7 +32,7 @@ macro_rules! keypress {
     (shift => $ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr) => {
         keypress!($ch,$base,$vk,$from,$to,PressShift, ReleaseShift);
     };
-    (one => $ch:ident, $code : expr, $vk) => {
+    (one => $ch:ident, $code : expr, $vk : expr) => {
         if ($ch as i32 == $code){
             return vec!(Key::Press($vk),Key::Release($vk));
         }
