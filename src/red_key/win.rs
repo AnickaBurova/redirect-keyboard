@@ -44,8 +44,8 @@ macro_rules! keypress {
     (shift => $ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr) => {
         keypress!($ch,$base,$vk,$from,$to,PressShift, ReleaseShift);
     };
-    (map => $ch:ident, $m : $ident) => {
-        match $m.get($ch as i32){
+    (map => $ch:ident, $keys : ident) => {
+        match $keys.get($ch as i32){
             Some(code) => keypress!(code),
             None => ()
         }
