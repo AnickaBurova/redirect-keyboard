@@ -45,11 +45,12 @@ macro_rules! keypress {
         keypress!($ch,$base,$vk,$from,$to,PressShift, ReleaseShift);
     };
     (map => $ch:ident, $keys : ident) => {
-        let $k = $ch as i32;
-        match $keys.get($k){
-            Some(code) => keypress!(code),
+        match $keys.get(&($ch as i32)){
+            Some(code) => {
+        		return vec!(Key::Press(*code),Key::Release(*code));
+    		}
             None => ()
-        };
+        }
     };
     (one => $ch:ident, $code : expr, $vk : expr) => {
         if ($ch as i32 == $code){
@@ -68,6 +69,11 @@ fn char2keys(ch : char) -> Vec<Key>{
             9 => winapi::VK_TAB,
             10 => winapi::VK_RETURN,
             32 => winapi::VK_SPACE,
+            65 => winapi::VK_UP,
+            66 => winapi::VK_DOWN,
+            67 => winapi::VK_RIGHT,
+            68 => winapi::VK_LEFT,
+
             127 => winapi::VK_BACK
             ];
     keypress!(map => ch, keys);
