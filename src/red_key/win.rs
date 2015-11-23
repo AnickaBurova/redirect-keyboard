@@ -5,6 +5,15 @@ extern crate user32;
 use std::mem;
 use std::io::{ Result  };
 use std::io::prelude::*;
+use std::collections::{HashMap};
+
+macro_rules! hashmap {
+    ($( $key: expr => $val: expr ),*) => {{
+         let mut map = ::std::collections::HashMap::new();
+         $( map.insert($key, $val); )*
+         map
+    }}
+}
 
 
 #[derive(Clone,Copy)]
@@ -17,10 +26,13 @@ static PressShift : Key = Key::Press(winapi::VK_LSHIFT);
 static ReleaseShift : Key = Key::Release(winapi::VK_LSHIFT);
 
 macro_rules! keypress {
+    ($vk:expr) => {
+        vec!(Key::Press($vk),Key::Release($vk));
+    };
     ($ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr) => {
         if($from <= $ch && $ch <= $to){
             let code = $ch as i32 - $base as i32 + $vk;
-            return vec!(Key::Press(code),Key::Release(code));
+            return keypress!(code);
         }
     };
     ($ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr, $front : expr, $back : expr) => {
@@ -32,19 +44,32 @@ macro_rules! keypress {
     (shift => $ch:ident, $base : expr, $vk : expr, $from : expr, $to : expr) => {
         keypress!($ch,$base,$vk,$from,$to,PressShift, ReleaseShift);
     };
+    (map => $ch:ident, $m : $ident) => {
+        match $m.get($ch as i32){
+            Some(code) => keypress!(code),
+            None => ()
+        }
+    };
     (one => $ch:ident, $code : expr, $vk : expr) => {
         if ($ch as i32 == $code){
-            return vec!(Key::Press($vk),Key::Release($vk));
+            return keypress!(code);
         }
     };
 }
+
+
 
 fn char2keys(ch : char) -> Vec<Key>{
     keypress!(shift => ch,'A', 0x41, 'A', 'Z');
     keypress!(ch,'a', 0x41, 'a', 'z');
     keypress!(ch,'0', 0x30, '0', '9');
-    keypress!(one => ch, 10, winapi::VK_RETURN);
-
+    let keys = hashmap![
+            9 => winapi::VK_TAB,
+            10 => winapi::VK_RETURN,
+            32 => winapi::VK_SPACE,
+            127 => winapi::VK_BACK
+            ];
+    keypress!(map => ch, keys);
     vec!()
 }
 
